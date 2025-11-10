@@ -39,13 +39,11 @@ public class Post extends BaseEntity {
     @Column(nullable = false)
     private Integer fee;
 
-    private Boolean isFavorite = false;
-
     private Boolean isBanned = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
+    @JoinColumn(name = "author_id", nullable = false)
+    private Member author;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostOption> options = new ArrayList<>();
@@ -56,8 +54,11 @@ public class Post extends BaseEntity {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostRegion> postRegions = new ArrayList<>();
 
-//    @ManyToOne
-//    private Category category; // 카테고리 추가 시 주석 해제
+//     카테고리 추가 예정
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "category_id", nullable = false)
+//    private Category category;
+
 
 
 }
