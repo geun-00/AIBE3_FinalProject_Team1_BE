@@ -2,6 +2,7 @@ package com.back.domain.region.region.service;
 
 import com.back.domain.region.region.dto.RegionCreateReqBody;
 import com.back.domain.region.region.dto.RegionResBody;
+import com.back.domain.region.region.dto.RegionUpdateReqBody;
 import com.back.domain.region.region.entity.Region;
 import com.back.domain.region.region.repository.RegionRepository;
 import com.back.global.exception.ServiceException;
@@ -53,5 +54,14 @@ public class RegionService {
 
         Region saved = regionRepository.save(region);
         return RegionResBody.of(saved);
+    }
+
+    public RegionResBody updateRegion(Long regionId, RegionUpdateReqBody regionUpdateReqBody) {
+        Region region = regionRepository.findRegionWithChildById(regionId).orElseThrow(
+                () -> new ServiceException("404-1", "%d번 지역은 존재하지 않습니다.".formatted(regionId))
+        );
+
+        region.setName(regionUpdateReqBody.name());
+        return RegionResBody.of(region);
     }
 }
