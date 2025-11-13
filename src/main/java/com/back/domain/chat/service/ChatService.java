@@ -3,6 +3,7 @@ package com.back.domain.chat.service;
 import com.back.domain.chat.dto.ChatRoomDto;
 import com.back.domain.chat.dto.CreateChatRoomResBody;
 import com.back.domain.chat.entity.ChatRoom;
+import com.back.domain.chat.repository.ChatQueryRepository;
 import com.back.domain.chat.repository.ChatRoomRepository;
 import com.back.domain.member.entity.Member;
 import com.back.domain.member.repository.MemberRepository;
@@ -27,6 +28,7 @@ public class ChatService {
     private final MemberRepository memberRepository;
     private final PostRepository postRepository;
     private final ChatRoomRepository chatRoomRepository;
+    private final ChatQueryRepository chatQueryRepository;
 
     @Transactional
     public CreateChatRoomResBody createOrGetChatRoom(Long postId, Long memberId) {
@@ -38,7 +40,7 @@ public class ChatService {
             throw new ServiceException(HttpStatus.BAD_REQUEST, "본인과 채팅방을 만들 수 없습니다.");
         }
 
-        Optional<Long> existingRoom = chatRoomRepository.findIdByPostAndMembers(postId, host.getId(), memberId);
+        Optional<Long> existingRoom = chatQueryRepository.getChatRoomId(postId, memberId);
         if (existingRoom.isPresent()) {
             Long roomId = existingRoom.get();
             return new CreateChatRoomResBody("이미 존재하는 채팅방입니다.", roomId);
@@ -53,7 +55,7 @@ public class ChatService {
     }
 
     public PagePayload<ChatRoomDto> getMyChatRooms(Long memberId, Pageable pageable, String keyword) {
-        Page<ChatRoomDto> chatRooms = chatRoomRepository.findByMemberId(memberId, pageable, keyword);
+        Page<ChatRoomDto> chatRooms = chatQueryRepository.getMyChatRooms(memberId, pageable, keyword);
 
         return PageUt.of(chatRooms);
     }
