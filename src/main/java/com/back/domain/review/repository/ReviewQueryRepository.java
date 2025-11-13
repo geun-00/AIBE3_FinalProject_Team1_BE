@@ -38,8 +38,7 @@ public class ReviewQueryRepository extends CustomQuerydslRepositorySupport {
                         .from(review)
                         .join(review.reservation, reservation)
                         .join(reservation.post, post)
-                        .where(post.id.eq(postId))
-                        .orderBy(review.createdAt.desc()),
+                        .where(post.id.eq(postId)),
                 countQuery -> countQuery
                         .select(review.count())
                         .from(review)
@@ -68,8 +67,7 @@ public class ReviewQueryRepository extends CustomQuerydslRepositorySupport {
                         .from(review)
                         .join(review.reservation, reservation)
                         .join(reservation.post, post)
-                        .where(post.author.id.eq(memberId))
-                        .orderBy(review.createdAt.desc()),
+                        .where(post.author.id.eq(memberId)),
                 countQuery -> countQuery
                         .select(review.count())
                         .from(review)
