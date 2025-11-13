@@ -22,6 +22,7 @@ import com.back.standard.util.page.PageUt;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -41,14 +42,14 @@ public class PostService {
 
     public Long createPost(PostCreateReqBody reqBody, Long memberId) {
 
-        Member author = memberRepository.findById(memberId).orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
+        Member author = memberRepository.findById(memberId).orElseThrow(() -> new ServiceException(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다."));
 
         Category category = categoryRepository.findById(reqBody.categoryId())
-                .orElseThrow(() -> new ServiceException("404-2", "존재하지 않는 카테고리입니다."));
+                .orElseThrow(() -> new ServiceException(HttpStatus.NOT_FOUND, "존재하지 않는 카테고리입니다."));
 
         List<Region> regions = regionRepository.findAllById(reqBody.regionIds());
         if (regions.isEmpty()) {
-            throw new ServiceException("404-3", "존재하지 않는 지역입니다.");
+            throw new ServiceException(HttpStatus.NOT_FOUND, "존재하지 않는 지역입니다.");
         }
 
         Post post = Post.builder()
@@ -167,7 +168,7 @@ public class PostService {
     public PostDetailResBody getPostById(Long postId, Long memberId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() ->
-                        new ServiceException("404-1", "%d번 글은 존재하지 않는 게시글입니다.".formatted(postId))
+                        new ServiceException(HttpStatus.NOT_FOUND, "%d번 글은 존재하지 않는 게시글입니다.".formatted(postId))
                 );
 
         boolean isFavorite = postFavoriteRepository.findByMemberIdAndPostId(memberId, postId).isPresent();
@@ -239,7 +240,7 @@ public class PostService {
     }
 
     public Post getById(Long id) {
-        return postRepository.findById(id).orElseThrow(() -> new ServiceException("404-2", "존재하지 않는 게시글입니다."));
+        return postRepository.findById(id).orElseThrow(() -> new ServiceException(HttpStatus.NOT_FOUND, "존재하지 않는 게시글입니다."));
     }
 
     public List<PostOption> getAllOptionsById(List<Long> optionIds) {
@@ -248,10 +249,10 @@ public class PostService {
 
     public boolean toggleFavorite(Long postId, long memberId) {
         Post post = getById(postId);
-        Member member = memberRepository.findById(memberId).orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
+        Member member = memberRepository.findById(memberId).orElseThrow(() -> new ServiceException(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다."));
 
         if (post.getAuthor().getId().equals(member.getId())) {
-            throw new ServiceException("404-3", "본인의 게시글은 즐겨찾기 할 수 없습니다.");
+            throw new ServiceException(HttpStatus.NOT_FOUND, "본인의 게시글은 즐겨찾기 할 수 없습니다.");
         }
 
         return postFavoriteRepository.findByMemberIdAndPostId(memberId, postId)

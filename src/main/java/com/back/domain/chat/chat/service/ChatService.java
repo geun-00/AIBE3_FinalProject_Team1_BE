@@ -14,6 +14,7 @@ import com.back.standard.util.page.PageUt;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,11 +32,11 @@ public class ChatService {
     @Transactional
     public CreateChatRoomResBody createOrGetChatRoom(Long postId, Long memberId) {
 
-        Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 게시글입니다."));
+        Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException(HttpStatus.NOT_FOUND, "존재하지 않는 게시글입니다."));
         Member host = post.getAuthor();
 
         if (host.getId().equals(memberId)) {
-            throw new ServiceException("400-1", "본인과 채팅방을 만들 수 없습니다.");
+            throw new ServiceException(HttpStatus.BAD_REQUEST, "본인과 채팅방을 만들 수 없습니다.");
         }
 
         Optional<Long> existingRoom = chatRoomRepository.findIdByPostAndMembers(postId, host.getId(), memberId);
