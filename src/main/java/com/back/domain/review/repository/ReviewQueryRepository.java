@@ -9,7 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import static com.back.domain.post.post.entity.QPost.post;
+import static com.back.domain.post.entity.QPost.post;
 import static com.back.domain.reservation.entity.QReservation.reservation;
 import static com.back.domain.review.entity.QReview.review;
 
