@@ -95,6 +95,20 @@ public class NotificationService {
         emitter.onError(e -> emitterRepository.deleteEmitter(memberId, emitterId));
     }
 
+    public void sendNotification(Long targetMemberId, NotificationResBody<? extends NotificationData> message) {
+        Map<String, SseEmitter> emitters = emitterRepository.findEmittersByMemberId(targetMemberId);
+
+        emitters.forEach((emitterId, emitter) -> {
+            try {
+                emitter.send(SseEmitter.event()
+                        .id(emitterId)
+                        .data(message));
+            } catch (Exception e) {
+                emitterRepository.deleteEmitter(targetMemberId, emitterId);
+            }
+        });
+    }
+
     public NotificationUnreadResBody hasUnread(Long memberId) {
         Boolean hasUnread = notificationRepository.existsByMemberIdAndIsReadFalse(memberId);
         return new NotificationUnreadResBody(hasUnread);
