@@ -56,7 +56,7 @@ public class PostService {
         }
 
         if (reqBody.images() != null && !reqBody.images().isEmpty()) {
-            List<PostImage> images = reqBody.images().stream().map(img -> new PostImage(post, "example.com/image.jpg", // TODO: 실제 업로드 로직으로 변경
+            List<PostImage> images = reqBody.images().stream().map(img -> new PostImage(post, img.imageUrl(),
                     img.isPrimary())).toList();
 
             post.resetPostImages(images);
@@ -151,7 +151,7 @@ public class PostService {
         List<PostOption> newOptions = reqBody.options().stream().map(option -> new PostOption(post, option.name(), option.deposit(), option.fee())).toList();
         post.resetPostOptions(newOptions);
 
-        List<PostImage> newImages = reqBody.images().stream().map(img -> new PostImage(post, "example.com/image.jpg", // TODO: 실제 업로드 로직으로 변경
+        List<PostImage> newImages = reqBody.images().stream().map(img -> new PostImage(post, img.imageUrl(),
                 img.isPrimary())).toList();
         post.resetPostImages(newImages);
 
@@ -167,4 +167,5 @@ public class PostService {
 
         this.postRepository.delete(post);
     }
+
 }

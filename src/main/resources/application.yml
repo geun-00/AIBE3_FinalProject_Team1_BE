@@ -46,3 +46,8 @@ custom:
     expireSeconds: 1000
   refreshToken:
     expireSeconds: 1000000
+
+cloud:
+  aws:
+    s3:
+      bucket: dev-chwimeet-bucket-1
