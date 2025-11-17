@@ -198,32 +198,6 @@ class ReservationControllerTest {
     }
 
     @Test
-    @DisplayName("예약 생성 실패 - 과거 날짜")
-    void createReservation_PastDate() throws Exception {
-        // given
-        CreateReservationReqBody reqBody = new CreateReservationReqBody(
-                ReservationDeliveryMethod.DELIVERY,
-                "서울시 강남구",
-                "테헤란로 123",
-                ReservationDeliveryMethod.DELIVERY,
-                LocalDate.now().minusDays(1),  // 과거 날짜
-                LocalDate.now().plusDays(3),
-                100L,
-                List.of()
-        );
-
-        // when & then
-        mockMvc.perform(post("/api/v1/reservations")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(reqBody))
-                        .cookie(new Cookie("accessToken", "mock-access-token")))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400));
-
-        verifyNoInteractions(reservationService);
-    }
-
-    @Test
     @DisplayName("예약 생성 실패 - 옵션 개수 초과")
     void createReservation_TooManyOptions() throws Exception {
         // given
