@@ -5,6 +5,7 @@ import com.back.domain.post.dto.req.PostUpdateReqBody;
 import com.back.domain.post.dto.res.PostCreateResBody;
 import com.back.domain.post.dto.res.PostDetailResBody;
 import com.back.domain.post.dto.res.PostListResBody;
+import com.back.domain.post.service.PostSearchService;
 import com.back.domain.post.service.PostService;
 import com.back.domain.review.service.ReviewSummaryService;
 import com.back.global.rsData.RsData;
@@ -32,6 +33,7 @@ public class PostController implements PostApi {
 
     private final PostService postService;
     private final ReviewSummaryService reviewSummaryService;
+    private final PostSearchService postSearchService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<RsData<PostCreateResBody>> createPost(
@@ -125,5 +127,17 @@ public class PostController implements PostApi {
         String body = reviewSummaryService.summarizeReviews(id);
 
         return ResponseEntity.ok(new RsData<>(HttpStatus.OK, HttpStatus.OK.name(), body));
+    }
+    @GetMapping("/search")
+    public ResponseEntity<?> searchPosts(
+            @RequestParam String query,
+            @AuthenticationPrincipal SecurityUser user
+    ) {
+
+        Long memberId = (user != null ? user.getId() : null);
+
+        List<PostListResBody> result = postSearchService.searchPosts(query, memberId);
+
+        return ResponseEntity.ok(result);
     }
 }

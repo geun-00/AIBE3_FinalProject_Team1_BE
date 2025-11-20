@@ -55,5 +55,9 @@ public record PostListResBody(
 
         );
     }
+
+    public static PostListResBody of(Post post) {
+        return of(post, false);
+    }
 }
 
