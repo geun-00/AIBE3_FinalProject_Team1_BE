@@ -18,6 +18,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
+
 @RestController
 @RequestMapping("/api/v1/members")
 @RequiredArgsConstructor
@@ -104,21 +106,19 @@ public class MemberController implements MemberApi{
         return ResponseEntity.ok(new RsData<>(HttpStatus.OK, "닉네임 중복 확인 완료", new MemberNicknameResBody(isDuplicated)));
     }
 
-    // 인증코드 발송
     @PostMapping("/send-code")
-    public ResponseEntity<RsData<Void>> sendVerificationCode(
+    public ResponseEntity<RsData<MemberSendCodeResBody>> sendVerificationCode(
             @RequestBody @Valid MemberSendCodeReqBody reqBody
     ) {
-        emailService.sendVerificationCode(reqBody.email());
-        return ResponseEntity.ok(new RsData<>(HttpStatus.OK, "이메일 인증이 발송되었습니다."));
+        LocalDateTime expiresIn = emailService.sendVerificationCode(reqBody.email());
+        return ResponseEntity.ok(new RsData<>(HttpStatus.OK, "이메일 인증이 발송되었습니다.", new MemberSendCodeResBody(expiresIn)));
     }
 
-    // 인증코드 검증
     @PostMapping("/verify-code")
-    public ResponseEntity<RsData<Void>> verifyCode(
+    public ResponseEntity<RsData<MemberVerifyResBody>> verifyCode(
             @RequestBody @Valid MemberVerifyReqBody reqBody
     ) {
         emailService.verifyCode(reqBody.email(), reqBody.code());
-        return ResponseEntity.ok(new RsData<>(HttpStatus.OK, "이메일 인증이 완료되었습니다."));
+        return ResponseEntity.ok(new RsData<>(HttpStatus.OK, "이메일 인증이 완료되었습니다.", new MemberVerifyResBody(true)));
     }
 }

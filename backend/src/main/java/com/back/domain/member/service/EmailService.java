@@ -8,6 +8,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
@@ -20,12 +21,15 @@ public class EmailService {
     private final StringRedisTemplate stringRedisTemplate;
     private final JavaMailSender mailSender;
 
-    public void sendVerificationCode(String email) {
+    public LocalDateTime sendVerificationCode(String email) {
         String code = generateCode();
         String key = buildKey(email);
 
         stringRedisTemplate.opsForValue()
                 .set(key, code, TTL_SECONDS, TimeUnit.SECONDS);
+
+        // 만료 시간 계산 (서버 기준 현재 시간 + TTL)
+        LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(TTL_SECONDS);
 
         String subject = "[Chwi-Meet] 이메일 인증코드 안내";
         String content = """
@@ -46,6 +50,9 @@ public class EmailService {
         message.setText(content);
 
         mailSender.send(message);
+
+        // 클라이언트에게 만료 시간 내려주기
+        return expiresAt;
     }
 
     public void verifyCode(String email, String code) {

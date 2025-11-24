@@ -49,12 +49,12 @@ public interface MemberApi {
     );
 
     @Operation(summary = "인증 코드 전송", description = "이메일로 인증 코드를 전송합니다.")
-    public ResponseEntity<RsData<Void>> sendVerificationCode(
+    public ResponseEntity<RsData<MemberSendCodeResBody>> sendVerificationCode(
             @RequestBody @Valid MemberSendCodeReqBody reqBody
     );
 
     @Operation(summary = "인증 코드 검증", description = "이메일과 인증 코드를 검증합니다.")
-    public ResponseEntity<RsData<Void>> verifyCode(
+    public ResponseEntity<RsData<MemberVerifyResBody>> verifyCode(
             @RequestBody @Valid MemberVerifyReqBody reqBody
     );
 }
