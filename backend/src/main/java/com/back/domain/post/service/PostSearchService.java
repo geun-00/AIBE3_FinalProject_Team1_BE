@@ -38,24 +38,23 @@ public class PostSearchService {
                 .filter(Objects::nonNull)
                 .toList();
 
-        if (memberId != null) {
-
-            return posts.stream()
-                    .map(post -> {
-
-                        boolean isFavorite = postfavoriteRepository.existsByMemberIdAndPostId(memberId, post.getId());
-
-                        return PostListResBody.of(post, isFavorite);
-                    })
-                    .toList();
-        }
-
         return posts.stream()
-                .map(PostListResBody::of)
+                .map(post -> {
+
+                    boolean isFavorite = (memberId != null)
+                            && postfavoriteRepository.existsByMemberIdAndPostId(memberId, post.getId());
+
+                    String thumbnail = post.getImages().isEmpty()
+                            ? null
+                            : post.getImages().get(0).getImageUrl();
+
+                    return PostListResBody.of(post, isFavorite, thumbnail);
+                })
                 .toList();
     }
 
     public String searchWithLLM(String query) {
+
         List<Document> docs = postVectorService.searchDocuments(query, 5);
 
         String context = docs.stream()
