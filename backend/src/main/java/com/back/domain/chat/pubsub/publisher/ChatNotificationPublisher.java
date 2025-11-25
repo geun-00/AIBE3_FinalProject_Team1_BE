@@ -23,7 +23,7 @@ public class ChatNotificationPublisher {
             ChatNotificationPubSubPayload payload = new ChatNotificationPubSubPayload(memberId, dto);
 
             redisTemplate.convertAndSend(chatNotificationTopic.getTopic(), payload);
-            log.debug("Published chat notification to room {}: {}", memberId, dto.type());
+            log.debug("Published chat notification to member {}: {}", memberId, dto.type());
 
         } catch (Exception e) {
             log.error("Failed to publish chat notification: memberId={}, type={}",

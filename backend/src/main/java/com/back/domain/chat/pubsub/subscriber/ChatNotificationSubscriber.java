@@ -15,14 +15,13 @@ import org.springframework.stereotype.Service;
 public class ChatNotificationSubscriber implements MessageListener {
 
     private final ChatWebsocketService chatWebsocketService;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper redisObjectMapper;
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
         try {
-            String json = new String(message.getBody());
             ChatNotificationPubSubPayload payload =
-                    objectMapper.readValue(json, ChatNotificationPubSubPayload.class);
+                    redisObjectMapper.readValue(message.getBody(), ChatNotificationPubSubPayload.class);
 
             log.debug("Received chat notification: userId={}, type={}",
                     payload.memberId(), payload.notification().type());
