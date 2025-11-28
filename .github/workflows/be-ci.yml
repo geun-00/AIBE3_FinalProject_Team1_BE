@@ -44,6 +44,17 @@ jobs:
           echo "${{ secrets.DOT_ENV_CI }}" > .env
           echo "✅ .env file created"
 
+      # .env 내용을 환경변수로 로드
+      - name: Load .env to environment
+        working-directory: backend
+        run: |
+          set -a
+          source .env
+          set +a
+          echo "SPRING__DATASOURCE__URL=${SPRING__DATASOURCE__URL}" >> $GITHUB_ENV
+          echo "SPRING__DATASOURCE__USERNAME=${SPRING__DATASOURCE__USERNAME}" >> $GITHUB_ENV
+          echo "SPRING__DATASOURCE__PASSWORD=${SPRING__DATASOURCE__PASSWORD}" >> $GITHUB_ENV
+
       # Docker Compose로 MariaDB & Redis 시작
       - name: Start MariaDB and Redis
         working-directory: backend
@@ -68,6 +79,10 @@ jobs:
             sleep 2
           done
           echo "✅ Redis is ready"
+
+      # JOOQ 소스 생성
+      - name: Generate JOOQ sources
+        run: ./gradlew generateJooq --no-daemon --info
 
       # gradle wrapper 보안 검증
       - name: Validate Gradle Wrapper
