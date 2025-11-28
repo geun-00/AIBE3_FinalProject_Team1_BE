@@ -100,32 +100,42 @@ jobs:
           ./gradlew --version
           java -version
 
-      - name: Initialize database schema with JPA entities
-        env:
-          SPRING__DATASOURCE__URL: jdbc:mariadb://localhost:3306/chwimeet?currentSchema=chwimeet
-          SPRING__DATASOURCE__USERNAME: root
-          SPRING__DATASOURCE__PASSWORD: ${{ secrets.DB_PASSWORD }}
-          SPRING__JPA__HIBERNATE__DDL_AUTO: create
-          SPRING__JPA__PROPERTIES__HIBERNATE__HBM2DDL__SCHEMA_GENERATION__SCRIPT__APPEND: false
+      - name: Temporarily disable JOOQ repository
         run: |
-          echo "=== Generating schema from JPA entities ==="
+          echo "=== Temporarily moving JOOQ repository ==="
+          if [ -f "src/main/java/com/back/domain/review/repository/ReviewJooqRepository.java" ]; then
+            mv src/main/java/com/back/domain/review/repository/ReviewJooqRepository.java \
+               src/main/java/com/back/domain/review/repository/ReviewJooqRepository.java.bak
+            echo "✅ Moved ReviewJooqRepository.java"
+          fi
+
+      - name: Initialize database schema with JPA
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mariadb://localhost:3306/chwimeet
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          SPRING_JPA_HIBERNATE_DDL_AUTO: update
+        run: |
+          echo "=== Initializing DB Schema with JPA ==="
           
-          # Hibernate SchemaExport를 사용해서 DDL 생성
-          cat > schema-gen.gradle.kts << 'EOF'
-          tasks.register("generateSchema") {
-              doLast {
-                  // Hibernate SchemaExport 실행
-                  val configuration = org.hibernate.cfg.Configuration()
+          # Spring Boot를 60초간 실행해서 JPA가 스키마 생성
+          timeout 60s ./gradlew bootRun --no-daemon || true
           
-                  // Entity 클래스들을 스캔
-                  val sessionFactory = configuration.buildSessionFactory()
+          sleep 5
           
-                  val schemaExport = org.hibernate.tool.hbm2ddl.SchemaExport(configuration)
-                  schemaExport.setOutputFile("schema.sql")
-                  schemaExport.create(true, false)
-              }
-          }
-          EOF
+          # 테이블 확인
+          echo "=== Checking tables ==="
+          docker exec chwimeet-mariadb mariadb -uroot -p${{ secrets.DB_PASSWORD }} -e "USE chwimeet; SHOW TABLES;"
+
+      - name: Restore JOOQ repository
+        if: always()
+        run: |
+          echo "=== Restoring JOOQ repository ==="
+          if [ -f "src/main/java/com/back/domain/review/repository/ReviewJooqRepository.java.bak" ]; then
+            mv src/main/java/com/back/domain/review/repository/ReviewJooqRepository.java.bak \
+               src/main/java/com/back/domain/review/repository/ReviewJooqRepository.java
+            echo "✅ Restored ReviewJooqRepository.java"
+          fi
 
       - name: Generate JOOQ sources
         env:
