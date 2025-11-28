@@ -170,8 +170,6 @@ class ChatControllerTest {
     @WithUserDetails(value = "user1@test.com", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     @DisplayName("채팅방 생성 성공")
     void test1_createChatRoom_success() throws Exception {
-        chatRoomRepository.deleteAll();
-
         // given
         Long postId = post1.getId();
         CreateChatRoomReqBody reqBody = new CreateChatRoomReqBody(postId);
