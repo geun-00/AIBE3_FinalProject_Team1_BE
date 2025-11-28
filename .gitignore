@@ -24,8 +24,6 @@ HELP.md
 
 # QueryDSL generated
 backend/src/main/generated/
-### JOOQ ###
-backend/src/main/generated-jooq/
 
 # H2 Database
 db_dev.mv.db
