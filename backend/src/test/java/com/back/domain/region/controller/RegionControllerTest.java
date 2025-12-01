@@ -1,5 +1,6 @@
 package com.back.domain.region.controller;
 
+import com.back.BaseTestContainer;
 import com.back.config.TestConfig;
 import com.back.domain.region.common.ChildRegion;
 import com.back.domain.region.dto.RegionResBody;
@@ -31,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(TestConfig.class)
 @AutoConfigureMockMvc
 @Transactional
-class RegionControllerTest {
+class RegionControllerTest extends BaseTestContainer {
 
     @Autowired
     private MockMvc mockMvc;

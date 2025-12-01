@@ -1,5 +1,6 @@
 package com.back.domain.report.controller;
 
+import com.back.BaseTestContainer;
 import com.back.config.TestConfig;
 import com.back.domain.member.service.AuthTokenService;
 import com.back.domain.member.service.RefreshTokenStore;
@@ -44,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(TestConfig.class)
 @AutoConfigureMockMvc
 @Transactional
-class ReportAdminControllerTest {
+class ReportAdminControllerTest extends BaseTestContainer {
 
     @Autowired
     private MockMvc mockMvc;

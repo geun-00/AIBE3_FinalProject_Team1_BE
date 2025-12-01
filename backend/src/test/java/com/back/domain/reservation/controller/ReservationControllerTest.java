@@ -1,5 +1,6 @@
 package com.back.domain.reservation.controller;
 
+import com.back.BaseTestContainer;
 import com.back.config.TestConfig;
 import com.back.domain.member.entity.Member;
 import com.back.domain.member.service.AuthTokenService;
@@ -50,7 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(TestConfig.class)
 @AutoConfigureMockMvc
 @Transactional
-class ReservationControllerTest {
+class ReservationControllerTest extends BaseTestContainer {
 
     @Autowired
     private MockMvc mockMvc;

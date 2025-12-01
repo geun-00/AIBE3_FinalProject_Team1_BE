@@ -1,5 +1,6 @@
 package com.back.domain.category.controller;
 
+import com.back.BaseTestContainer;
 import com.back.config.TestConfig;
 import com.back.domain.category.common.ChildCategory;
 import com.back.domain.category.dto.CategoryResBody;
@@ -30,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(TestConfig.class)
 @AutoConfigureMockMvc
 @Transactional
-class CategoryControllerTest {
+class CategoryControllerTest extends BaseTestContainer {
 
     @Autowired
     private MockMvc mockMvc;
