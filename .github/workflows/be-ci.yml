@@ -114,22 +114,6 @@ jobs:
       # ========================================
       # 🚀 최적화: Flyway 마이그레이션이 변경된 경우만 JOOQ 재생성
       # ========================================
-      - name: Run Flyway migration
-        if: steps.cache-jooq.outputs.cache-hit != 'true'
-        run: |
-          echo "=== Running Flyway migration ==="
-          
-          if [ -f "src/main/resources/db/migration/V1__init_tables.sql" ]; then
-            docker exec -i chwimeet-mariadb mariadb -uroot -p${{ secrets.DB_PASSWORD }} chwimeet < src/main/resources/db/migration/V1__init_tables.sql
-            echo "✅ Flyway migration completed"
-          else
-            echo "❌ V1__init_tables.sql not found"
-            exit 1
-          fi
-          
-          echo "=== Tables in database ==="
-          docker exec chwimeet-mariadb mariadb -uroot -p${{ secrets.DB_PASSWORD }} -e "USE chwimeet; SHOW TABLES;"
-
       - name: Generate JOOQ sources
         if: steps.cache-jooq.outputs.cache-hit != 'true'
         env:
@@ -141,6 +125,8 @@ jobs:
           echo "Checking environment variables (masked):"
           echo "SPRING__DATASOURCE__USERNAME=$SPRING__DATASOURCE__USERNAME"
           echo "SPRING__DATASOURCE__URL=$SPRING__DATASOURCE__URL"
+          echo ""
+          echo "⚙️  JOOQ plugin will automatically run Flyway migration"
           
           # Run with stacktrace for better error messages
           ./gradlew generateJooqClasses --no-daemon --stacktrace
@@ -152,6 +138,9 @@ jobs:
             echo "❌ JOOQ generation failed"
             exit 1
           fi
+          
+          echo "=== Verifying tables in database ==="
+          docker exec chwimeet-mariadb mariadb -uroot -p${{ secrets.DB_PASSWORD }} -e "USE chwimeet; SHOW TABLES;"
 
       - name: Skip JOOQ generation (using cache)
         if: steps.cache-jooq.outputs.cache-hit == 'true'

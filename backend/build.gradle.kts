@@ -126,7 +126,7 @@ val dbHost: String = System.getenv("DB_HOST") ?: "localhost"
 
 jooq {
     version = jooqVersion
-    // ✅ 환경변수가 없으면 JOOQ 설정을 스킵
+
     if (dbUser != null && dbPasswd != null) {
         withoutContainer {
             db {
@@ -141,23 +141,12 @@ jooq {
                 }
             }
         }
-    } else {
-        logger.warn("⚠️  DB credentials not found. JOOQ generation will be skipped.")
-        logger.warn("Set SPRING__DATASOURCE__USERNAME and SPRING__DATASOURCE__PASSWORD environment variables.")
     }
 }
 
 tasks {
     generateJooqClasses {
-        // ✅ 환경변수 체크
-        onlyIf {
-            val hasCredentials = dbUser != null && dbPasswd != null
-            if (!hasCredentials) {
-                logger.warn("⚠️  Skipping JOOQ generation - DB credentials not found")
-            }
-            hasCredentials
-        }
-
+        onlyIf { dbUser != null && dbPasswd != null }
         schemas = listOf("chwimeet")
         basePackageName = "com.back.jooq"
         outputDirectory = project.layout.projectDirectory.dir("src/generated")
