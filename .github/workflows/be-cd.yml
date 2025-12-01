@@ -90,7 +90,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: backend/src/generated
-          key: jooq-${{ hashFiles('backend/src/main/resources/schema.sql', 'backend/build.gradle.kts') }}
+          key: jooq-${{ hashFiles('backend/src/main/resources/db/migration/*.sql', 'backend/build.gradle.kts') }}
           restore-keys: |
             jooq-
 
@@ -115,20 +115,29 @@ jobs:
           done
           echo "✅ MariaDB is ready"
 
-      - name: Initialize database schema (if cache miss)
+      - name: Run Flyway migration (if cache miss)
         if: steps.cache-jooq.outputs.cache-hit != 'true'
         env:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          echo "=== Loading schema from SQL file ==="
+          echo "=== Running Flyway migration ==="
           
-          if [ -f "src/main/resources/schema.sql" ]; then
-            docker exec -i chwimeet-mariadb mariadb -uroot -p${DB_PASSWORD} chwimeet < src/main/resources/schema.sql
-            echo "✅ Schema loaded from SQL file"
+          if [ -f "src/main/resources/db/migration/V1__init_tables.sql" ]; then
+            docker exec -i chwimeet-mariadb mariadb -uroot -p${DB_PASSWORD} chwimeet < src/main/resources/db/migration/V1__init_tables.sql
+            echo "✅ Flyway migration completed"
           else
-            echo "❌ schema.sql not found"
+            echo "❌ V1__init_tables.sql not found"
             exit 1
           fi
+
+      - name: Verify DB connection (if cache miss)
+        if: steps.cache-jooq.outputs.cache-hit != 'true'
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          echo "=== Verifying DB connection ==="
+          docker exec chwimeet-mariadb mariadb -uroot -p${DB_PASSWORD} -e "SELECT VERSION();"
+          echo "✅ DB connection verified"
 
       - name: Generate JOOQ sources (if cache miss)
         if: steps.cache-jooq.outputs.cache-hit != 'true'
@@ -138,7 +147,12 @@ jobs:
           SPRING__DATASOURCE__URL: jdbc:mariadb://localhost:3306/chwimeet
         run: |
           echo "=== Starting JOOQ Generation ==="
-          ./gradlew generateJooqClasses --no-daemon --info
+          echo "Checking environment variables (masked):"
+          echo "SPRING__DATASOURCE__USERNAME=$SPRING__DATASOURCE__USERNAME"
+          echo "SPRING__DATASOURCE__URL=$SPRING__DATASOURCE__URL"
+          
+          # Run with stacktrace for better error messages
+          ./gradlew generateJooqClasses --no-daemon --stacktrace
           
           if [ -d "src/generated/com/back/jooq/tables" ]; then
             echo "✅ JOOQ generated successfully"

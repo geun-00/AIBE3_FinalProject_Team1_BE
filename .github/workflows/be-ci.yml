@@ -76,7 +76,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: backend/src/generated
-          key: jooq-${{ hashFiles('backend/src/main/resources/schema.sql', 'backend/build.gradle.kts') }}
+          key: jooq-${{ hashFiles('backend/src/main/resources/db/migration/*.sql', 'backend/build.gradle.kts') }}
           restore-keys: |
             jooq-
 
@@ -112,18 +112,18 @@ jobs:
           java -version
 
       # ========================================
-      # 🚀 최적화: schema.sql이 변경된 경우만 JOOQ 재생성
+      # 🚀 최적화: Flyway 마이그레이션이 변경된 경우만 JOOQ 재생성
       # ========================================
-      - name: Initialize database schema
+      - name: Run Flyway migration
         if: steps.cache-jooq.outputs.cache-hit != 'true'
         run: |
-          echo "=== Loading schema from SQL file ==="
+          echo "=== Running Flyway migration ==="
           
-          if [ -f "src/main/resources/schema.sql" ]; then
-            docker exec -i chwimeet-mariadb mariadb -uroot -p${{ secrets.DB_PASSWORD }} chwimeet < src/main/resources/schema.sql
-            echo "✅ Schema loaded from SQL file"
+          if [ -f "src/main/resources/db/migration/V1__init_tables.sql" ]; then
+            docker exec -i chwimeet-mariadb mariadb -uroot -p${{ secrets.DB_PASSWORD }} chwimeet < src/main/resources/db/migration/V1__init_tables.sql
+            echo "✅ Flyway migration completed"
           else
-            echo "❌ schema.sql not found"
+            echo "❌ V1__init_tables.sql not found"
             exit 1
           fi
           
@@ -132,9 +132,18 @@ jobs:
 
       - name: Generate JOOQ sources
         if: steps.cache-jooq.outputs.cache-hit != 'true'
+        env:
+          SPRING__DATASOURCE__USERNAME: root
+          SPRING__DATASOURCE__PASSWORD: ${{ secrets.DB_PASSWORD }}
+          SPRING__DATASOURCE__URL: jdbc:mariadb://localhost:3306/chwimeet
         run: |
           echo "=== Starting JOOQ Generation ==="
-          ./gradlew generateJooqClasses --no-daemon --build-cache --info
+          echo "Checking environment variables (masked):"
+          echo "SPRING__DATASOURCE__USERNAME=$SPRING__DATASOURCE__USERNAME"
+          echo "SPRING__DATASOURCE__URL=$SPRING__DATASOURCE__URL"
+          
+          # Run with stacktrace for better error messages
+          ./gradlew generateJooqClasses --no-daemon --stacktrace
           
           if [ -d "src/generated/com/back/jooq/tables" ]; then
             echo "✅ JOOQ generated successfully"
@@ -171,17 +180,6 @@ jobs:
 
       - name: Assemble (no tests)
         run: ./gradlew assemble -x test -x jacocoTestReport -x generateJooqClasses --build-cache --no-daemon
-
-      # ========================================
-      # 🚀 JOOQ 생성 파일 업로드 (CD에서 사용)
-      # ========================================
-      - name: Upload JOOQ generated sources
-        uses: actions/upload-artifact@v4
-        with:
-          name: jooq-generated-sources
-          path: backend/src/generated/
-          retention-days: 1  # CD에서만 사용하므로 1일만 보관
-          if-no-files-found: error
 
       # 테스트 결과 업로드
       - name: Upload test results (JUnit XML)
