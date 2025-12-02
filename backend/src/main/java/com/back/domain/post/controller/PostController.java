@@ -165,7 +165,7 @@ public class PostController implements PostApi {
 		return ResponseEntity.ok(response);
 	}
 
-	@GetMapping("/search/ai")
+	@GetMapping("/search-ai")
 	public ResponseEntity<RsData<?>> searchPostsWithAi(
 		@RequestParam String query,
 		@AuthenticationPrincipal SecurityUser user
