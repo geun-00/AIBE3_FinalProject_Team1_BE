@@ -281,9 +281,8 @@ public class PostService {
 
 		post.resetPostImages(processPostImage(post, reqBody, images));
 
-		// 기존 임베딩 데이터 삭제
 		postVectorService.deletePost(postId);
-		// 수정된 게시글은 다시 임베딩 대기 상태로 변경
+
 		post.updateEmbeddingStatusWait();
 	}
 
@@ -379,19 +378,17 @@ public class PostService {
 	}
 
 	public void embedPostsBatch() {
-		List<Post> postsToEmbed = postQueryRepository.findPostsToEmbedWithDetails(100); // 한 번에 최대 100개 게시글 처리
+		List<Post> postsToEmbed = postQueryRepository.findPostsToEmbedWithDetails(100);
 
 		if (postsToEmbed.isEmpty()) {
 			log.info("임베딩할 WAIT 상태의 게시글이 없습니다.");
 			return;
 		}
 
-		// 1️⃣ DTO 변환 (버전 정보 포함)
 		List<PostEmbeddingDto> postDtos = postsToEmbed.stream().map(PostEmbeddingDto::from).toList();
 
 		List<Long> postIds = postDtos.stream().map(PostEmbeddingDto::id).toList();
 
-		// 2️⃣ 벌크로 선점 시도 (버전 증가)
 		long updatedCount = postTransactionService.updateStatusToPending(postIds);
 
 		if (updatedCount == 0) {
@@ -401,12 +398,10 @@ public class PostService {
 
 		log.info("총 {}개의 게시글을 PENDING 상태로 선점 시도했습니다.", updatedCount);
 
-		// 3️⃣ 실제로 선점된 게시글만 필터링 (낙관적 락 검증)
 		List<PostEmbeddingDto> acquiredPosts = postTransactionService.verifyAcquiredPosts(postDtos);
 
 		log.info("실제 선점 성공: {}건 (다른 워커 선점: {}건)", acquiredPosts.size(), postDtos.size() - acquiredPosts.size());
 
-		// 4️⃣ 임베딩 처리
 		int successCount = 0;
 		int failedCount = 0;
 

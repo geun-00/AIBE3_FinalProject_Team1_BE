@@ -136,7 +136,7 @@ public class Post extends BaseEntity {
 		this.returnAddress2 = returnAddress2;
 		this.deposit = deposit;
 		this.fee = fee;
-		this.embeddingStatus = EmbeddingStatus.WAIT; // 수정 시 임베딩 스케줄러에 대상 포함
+		this.embeddingStatus = EmbeddingStatus.WAIT;
 	}
 
 	public void updateCategory(Category category) {
