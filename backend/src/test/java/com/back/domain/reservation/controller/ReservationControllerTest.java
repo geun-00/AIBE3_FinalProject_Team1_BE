@@ -195,7 +195,7 @@ class ReservationControllerTest extends BaseContainerIntegrationTest {
     @Test
     @WithUserDetails("user2@example.com") // 7번 예약의 게스트 (취소 요청 권한 보유자)
     @DisplayName("게스트의 예약 상태 업데이트 테스트 (PENDING_APPROVAL -> CANCELLED, 성공)")
-    void updateReservationStatusTest_Cancel_Success() throws Exception {
+    void updateReservationStatusTest_Cancel() throws Exception {
         Long reservationId = 7L;
 
         // 1. 상태 변경 요청 본문 생성
@@ -212,7 +212,7 @@ class ReservationControllerTest extends BaseContainerIntegrationTest {
         String content = objectMapper.writeValueAsString(requestBody);
 
 
-        mockMvc.perform(put("/api/v1/reservations/{id}/status", reservationId)
+        mockMvc.perform(patch("/api/v1/reservations/{id}/status", reservationId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
                 .andExpectAll(
@@ -222,7 +222,8 @@ class ReservationControllerTest extends BaseContainerIntegrationTest {
                         jsonPath("$.data.id").value(is(reservationId.intValue())),
                         jsonPath("$.data.status").value(is("CANCELLED")),
                         jsonPath("$.data.cancelReason").value(is("취소 사유")),
-                        jsonPath("$.data.receiveCarrier").value(nullValue())
+                        jsonPath("$.data.receiveCarrier").value(nullValue()),
+                        jsonPath("$.data.rejectReason").value(nullValue())
                 );
     }
 }
