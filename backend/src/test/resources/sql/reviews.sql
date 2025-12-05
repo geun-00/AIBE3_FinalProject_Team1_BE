@@ -1,5 +1,5 @@
 SET FOREIGN_KEY_CHECKS = 0;
-TRUNCATE TABLE reviews;
+TRUNCATE TABLE review;
 SET FOREIGN_KEY_CHECKS = 1;
 
 INSERT INTO review (id, created_at, modified_at, comment, equipment_score, is_banned, kindness_score, response_time_score, reservation_id)
