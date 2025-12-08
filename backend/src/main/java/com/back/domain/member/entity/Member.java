@@ -22,35 +22,35 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class Member extends BaseEntity {
-    @Column(unique = true, nullable = false)
+    @Column(name = "email", unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false)
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column
+    @Column(name = "name")
     private String name;
 
-    @Column(unique = true)
+    @Column(name = "phone_number",unique = true)
     private String phoneNumber;
 
-    @Column
+    @Column(name = "address1")
     private String address1;
 
-    @Column
+    @Column(name = "address2")
     private String address2;
 
-    @Column(unique = true, nullable = false)
+    @Column(name = "nickname",unique = true, nullable = false)
     private String nickname;
 
-    @Column(nullable = false)
+    @Column(name="is_banned", nullable = false)
     private boolean isBanned;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "role", nullable = false)
     private MemberRole role;
 
-    @Column
+    @Column(name = "profile_img_url")
     private String profileImgUrl;
 
     public static Member createForJoin(String email, String password, String nickname) {
