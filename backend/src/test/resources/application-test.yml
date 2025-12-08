@@ -1,6 +1,20 @@
 spring:
+  datasource:
+    url: ${SPRING__DATASOURCE__URL}
+    username: ${SPRING__DATASOURCE__USERNAME}
+    password: ${SPRING__DATASOURCE__PASSWORD}
+    driver-class-name: org.mariadb.jdbc.Driver
+
   autoconfigure:
     exclude: org.springframework.ai.vectorstore.mariadb.autoconfigure.MariaDbStoreAutoConfiguration
+
   sql:
     init:
       mode: never
+
+  flyway:
+    enabled: false
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
