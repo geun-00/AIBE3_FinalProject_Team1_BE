@@ -346,6 +346,8 @@ services:
       - common
     ports:
       - "8080:8080"
+    volumes:
+      - /dockerProjects/team1-app-001/logs:/app/logs
     environment:
       - TZ=Asia/Seoul
       - SPRING_PROFILES_ACTIVE=prod
@@ -381,6 +383,8 @@ services:
       - common
     ports:
       - "8081:8080"
+    volumes:
+      - /dockerProjects/team1-app-002/logs:/app/logs
     environment:
       - TZ=Asia/Seoul
       - SPRING_PROFILES_ACTIVE=prod
