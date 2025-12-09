@@ -1,7 +1,6 @@
 package com.back.domain.post.controller;
 
 import com.back.config.TestConfig;
-import com.back.global.s3.S3FolderType;
 import com.back.global.s3.S3Uploader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -50,7 +49,7 @@ class PostControllerTest {
 
 	@BeforeEach
 	void setup() {
-		when(s3Uploader.upload(any(), S3FolderType.POST_IMAGE))
+		when(s3Uploader.upload(any(), any()))
 			.thenReturn("https://bucket.s3.ap-northeast-2.amazonaws.com/post/test.jpg");
 
 		doNothing().when(s3Uploader).delete(anyString());
