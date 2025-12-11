@@ -148,14 +148,14 @@ public class ReviewQueryRepository extends CustomQuerydslRepositorySupport {
     }
 
     public long bulkBanReview(List<Long> reviewIds) {
-        long updatedCount = getQueryFactory()
+        if (reviewIds == null || reviewIds.isEmpty()) {
+            return 0L;
+        }
+
+        return getQueryFactory()
                 .update(review)
                 .set(review.isBanned, true)
                 .where(review.id.in(reviewIds))
                 .execute();
-
-        getEntityManager().clear();
-
-        return updatedCount;
     }
 }

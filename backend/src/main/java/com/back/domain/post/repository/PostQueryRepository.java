@@ -1,23 +1,5 @@
 package com.back.domain.post.repository;
 
-import static com.back.domain.member.entity.QMember.*;
-import static com.back.domain.post.entity.QPost.*;
-import static com.back.domain.post.entity.QPostRegion.*;
-import static com.back.domain.region.entity.QRegion.*;
-import static com.back.domain.reservation.entity.QReservation.*;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Repository;
-
 import com.back.domain.post.common.EmbeddingStatus;
 import com.back.domain.post.dto.req.PostEmbeddingDto;
 import com.back.domain.post.entity.Post;
@@ -26,6 +8,19 @@ import com.back.domain.reservation.entity.Reservation;
 import com.back.global.queryDsl.CustomQuerydslRepositorySupport;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.back.domain.member.entity.QMember.member;
+import static com.back.domain.post.entity.QPost.post;
+import static com.back.domain.post.entity.QPostRegion.postRegion;
+import static com.back.domain.region.entity.QRegion.region;
+import static com.back.domain.reservation.entity.QReservation.reservation;
 
 @Repository
 public class PostQueryRepository extends CustomQuerydslRepositorySupport {
@@ -102,14 +97,14 @@ public class PostQueryRepository extends CustomQuerydslRepositorySupport {
 	 * @return 실제로 변경된 레코드(row) 수
 	 */
 	public long bulkBanPosts(List<Long> postIds) {
-		long updatedCount = getQueryFactory().update(post)
-			.set(post.isBanned, true)
-			.where(post.id.in(postIds))
-			.execute();
+		if (postIds == null || postIds.isEmpty()) {
+			return 0L;
+		}
 
-		getEntityManager().clear();
-
-		return updatedCount;
+		return getQueryFactory().update(post)
+				.set(post.isBanned, true)
+				.where(post.id.in(postIds))
+				.execute();
 	}
 
 	public List<Post> findPostsToEmbedWithDetails(int limit) {
@@ -133,14 +128,11 @@ public class PostQueryRepository extends CustomQuerydslRepositorySupport {
 			return 0;
 		}
 
-		long updatedCount = getQueryFactory().update(post)
+		return getQueryFactory().update(post)
 			.set(post.embeddingStatus, EmbeddingStatus.PENDING)
 			.set(post.embeddingVersion, post.embeddingVersion.add(1))
 			.where(post.id.in(postIds), post.embeddingStatus.eq(EmbeddingStatus.WAIT))
 			.execute();
-
-		getEntityManager().clear();
-		return updatedCount;
 	}
 
 	/**
@@ -175,14 +167,10 @@ public class PostQueryRepository extends CustomQuerydslRepositorySupport {
 			return 0;
 		}
 
-		long updatedCount = getQueryFactory().update(post)
-			.set(post.embeddingStatus, toStatus)
-			.where(post.id.in(postIds), post.embeddingStatus.eq(fromStatus))
-			.execute();
-
-		getEntityManager().clear();
-
-		return updatedCount;
+		return getQueryFactory().update(post)
+				.set(post.embeddingStatus, toStatus)
+				.where(post.id.in(postIds), post.embeddingStatus.eq(fromStatus))
+				.execute();
 	}
 }
 

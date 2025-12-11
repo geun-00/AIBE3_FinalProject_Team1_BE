@@ -13,14 +13,14 @@ public class MemberQueryRepository extends CustomQuerydslRepositorySupport {
     public MemberQueryRepository() { super(Member.class); }
 
     public long bulkBanMember(List<Long> memberIds) {
-        long updatedCount = getQueryFactory()
+        if (memberIds == null || memberIds.isEmpty()) {
+            return 0L;
+        }
+
+        return getQueryFactory()
                 .update(member)
                 .set(member.isBanned, true)
                 .where(member.id.in(memberIds))
                 .execute();
-
-        getEntityManager().clear();
-
-        return updatedCount;
     }
 }
