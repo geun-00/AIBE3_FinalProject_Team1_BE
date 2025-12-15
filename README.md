@@ -397,7 +397,7 @@ Mapper를 통한 타입별 응답 데이터 매핑
 
 ### 단계별 핵심 로직
 
-##### 1. 알림 엔티티 페이징 조회
+#### 1. 알림 엔티티 페이징 조회
 
 ```java
 Page<Notification> notificationsPage =
@@ -410,7 +410,7 @@ List<Notification> notifications = notificationsPage.getContent();
 
 ---
 
-##### 2. 알림 타입 기준 그룹화
+#### 2. 알림 타입 기준 그룹화
 
 ```java
 Map<NotificationType.GroupType, List<Long>> groupedTargetIds =
@@ -425,7 +425,7 @@ Map<NotificationType.GroupType, List<Long>> groupedTargetIds =
 
 ---
 
-##### 3. 그룹별 Batch 조회로 연관 엔티티 로딩
+#### 3. 그룹별 Batch 조회로 연관 엔티티 로딩
 
 ```java
 for (Map.Entry<NotificationType.GroupType, List<Long>> entry : groupedTargetIds.entrySet()) {
@@ -444,7 +444,7 @@ for (Map.Entry<NotificationType.GroupType, List<Long>> entry : groupedTargetIds.
 
 ---
 
-##### 4. Mapper를 통한 타입별 응답 데이터 매핑
+#### 4. Mapper를 통한 타입별 응답 데이터 매핑
 
 ```java
 for (Notification notification : notifications) {
@@ -464,7 +464,7 @@ for (Notification notification : notifications) {
 - Batch 조회 시 DTO로 직접 조회하지 않고 Entity를 로딩한 뒤 Mapper에서 응답 DTO로 변환
 - 알림 타입별 응답 구조 변경 시 쿼리 수정 없이 Mapper만 변경 가능
 
-##### 5. 응답 반환
+#### 5. 응답 반환
 
 ```java
 public record NotificationResBody<T extends NotificationData>(
