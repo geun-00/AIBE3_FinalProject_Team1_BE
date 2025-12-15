@@ -128,6 +128,12 @@
 
 ![게시글 자동 생성](images/AI기능/게시글%20등록.gif)
 
+- 이미지를 기반으로 게시글 내용 생성
+- 이미지를 분석하여 제목, 내용, 카테고리, 가격, 옵션 정보 작성
+- 첫 번째 사진을 메인 물건으로 인식
+- 이후 사진들에서 다른 물건으로 인식될 시 옵션으로 내용 추가
+- 사용자로 부터 이미지 외에도 추가적인 정보를 텍스트로 입력받을 수 있도록 설계
+
 ### AI 후기 요약
 
 ![AI 후기 요약](images/AI기능/후기%20요약.gif)
@@ -183,9 +189,18 @@
 <!-- 후기 -->
 <details> <summary>⭐ 후기</summary>
 
-### 후기 작성/조회
+### 후기 작성
 
-- AI 요약 기능 제공
+![후기작성](images/리뷰/리뷰%20작성.gif)
+
+- 일정 단계 이상 진행 된 예약에 대하여 후기 작성가능
+
+### 후기 통계
+
+![후기통계](images/리뷰/리뷰%20목록%20및%20통계.gif)
+
+- 사용자가 등록한 게시글에 대한 사용자 후기 통계 기능
+- 단일 게시글에 대한 후기 통계 기능
 
 </details>
 
@@ -213,6 +228,10 @@
 <details>
 <summary>🔔 알림</summary>
 
+### 알림 기능
+
+![알림](images/알림/알림.gif)
+
 - 이벤트 알림 제공
 - SSE 기반 실시간 알림
 
@@ -225,6 +244,33 @@
 - 게시글, 댓글, 후기 신고 가능
 - 관리자가 확인 후 처리
 - 알림과 연동되어 신고 처리 결과 확인 가능
+
+</details>
+
+<!-- 관리자 -->
+<details>
+<summary>⚙️ 관리자</summary>
+
+### 지역 관리 기능
+
+![지역](images/지역/지역.gif)
+
+- 등록된 지역 목록 조회
+- 지역 등록, 수정, 삭제
+
+### 카테고리 관리 기능
+
+![카테고리](images/카테고리/카테고리.gif)
+
+- 등록된 카테고리 목록 조회
+- 카테고리 등록, 수정, 삭제
+
+### 신고 목록 확인 및 제제 기능
+
+![신고제제](images/신고/신고%20제제.gif)
+
+- 사용자가 등록한 신고 목록 조회
+- 제제 버튼으로 제제할 수 있는 기능
 
 </details>
 
@@ -543,6 +589,163 @@ return "https://" + cloudfrontDomain + "/" + resizedKey;
 
 
 <br>
+
+<details>
+<summary><strong>🔔 알림 타입 기준 Batch 로딩과 Mapper 기반 응답 조합을 적용한 알림 조회 설계 </strong></summary>
+
+<br>
+
+### 기능 개요
+
+알림 목록 조회 API는 **페이징·정렬 기준에 따라 하나의 목록으로 조회되지만**,  
+목록에 포함된 각 알림은 **알림 타입에 따라 참조해야 하는 엔티티와 응답 구조가 서로 다릅니다.**
+
+이를 단순 조건 분기나 타입별로 분리된 API로 처리하지 않고,  
+**목록 조회 성능을 유지하면서도 알림 타입 확장에 유연한 조회 구조**로 설계했습니다.
+
+--- 
+
+
+### 설계 목표
+
+- **요청 쿼리 최소화**
+  - 알림 개수에 비례해 쿼리가 증가하는 N+1 문제 방지
+- **확장성 확보**
+  - 알림 타입 추가 시 서비스 계층 로직 수정 없이 확장 가능
+- **역할 분리**
+  - 조회 / 로딩 / 응답 조합 책임을 명확히 분리
+ 
+---
+
+
+### 처리 흐름
+
+```text
+알림 엔티티 페이징 조회
+(알림 타입, 연관 엔티티 ID)
+        ↓
+알림 타입 기준 그룹화
+        ↓
+그룹별 Batch 조회로 필요한 엔티티 로딩
+        ↓
+Mapper를 통한 타입별 응답 데이터 매핑
+        ↓
+  페이징 응답 반환
+```
+---
+
+### 단계별 핵심 로직
+
+#### 1. 알림 엔티티 페이징 조회
+
+```java
+Page<Notification> notificationsPage =
+        notificationRepository.findAllByMemberIdOrderByCreatedAtDesc(memberId, pageable);
+
+List<Notification> notifications = notificationsPage.getContent();
+```
+- 알림 엔티티 페이징 조회
+- 알림 ID, 알림 타입 등 기본 정보와 함께 연관 엔티티 ID 조회
+
+---
+
+#### 2. 알림 타입 기준 그룹화
+
+```java
+Map<NotificationType.GroupType, List<Long>> groupedTargetIds =
+        notifications.stream()
+                .collect(Collectors.groupingBy(
+                        n -> n.getType().getGroupType(),
+                        Collectors.mapping(Notification::getTargetId, Collectors.toList())
+                ));
+```
+- batch 조회를 위한 사전 작업
+- GroupType을 Key로, 조회해야 할 연관 엔티티 ID들을 그룹화
+
+---
+
+#### 3. 그룹별 Batch 조회로 연관 엔티티 로딩
+
+```java
+for (Map.Entry<NotificationType.GroupType, List<Long>> entry : groupedTargetIds.entrySet()) {
+    NotificationType.GroupType groupType = entry.getKey();
+    List<Long> targetIds = entry.getValue();
+
+    Function<List<Long>, Map<Long, ?>> loader = batchLoaders.get(groupType);
+    if (loader != null) {
+      loadedEntities.put(groupType, loader.apply(targetIds));
+    }
+}
+```
+
+- 그룹화 한 Map 정보를 바탕으로 타입 별로 batch 조회
+- 알림 개수와 무관하게 타입 수 만큼만 쿼리 발생
+
+---
+
+#### 4. Mapper를 통한 타입별 응답 데이터 매핑
+
+```java
+for (Notification notification : notifications) {
+    NotificationDataMapper<? extends NotificationData> mapper =
+            mapperRegistry.get(notification.getType());
+
+    Map<Long, ?> entityMap =
+            loadedEntities.get(notification.getType().getGroupType());
+    Object entity =
+            entityMap != null ? entityMap.get(notification.getTargetId()) : null;
+
+    NotificationData data = mapper.map(entity, notification);
+}
+
+```
+
+---
+
+- Batch 조회 시 DTO로 직접 조회하지 않고 Entity를 로딩한 뒤 Mapper에서 응답 DTO로 변환
+- 알림 타입별 응답 구조 변경 시 쿼리 수정 없이 Mapper만 변경 가능
+
+#### 5. 응답 반환
+
+```java
+public record NotificationResBody<T extends NotificationData>(
+        Long id,
+        NotificationType notificationType,
+        LocalDateTime createdAt,
+        Boolean isRead,
+        T data
+)
+```
+
+- 위 형태의 응답 DTO를 페이징 으로 감싸서 반환
+- 하나의 API 응답에서 알림 타입에 따라 서로 다른 데이터 구조를 반환
+
+<br>
+
+---
+
+### 새로운 알림 타입 추가
+
+새로운 알림 타입이 추가되더라도 **기존 조회 로직이나 서비스 계층 코드는 수정하지 않습니다.**  
+아래 두 지점만 확장하도록 설계했습니다.
+
+- **Batch 조회 로더 추가**
+  - 알림 타입이 참조하는 연관 엔티티를 한 번에 조회하는 로직을 `GroupType` 기준으로 등록
+
+- **알림 타입별 Mapper 추가**
+  - 해당 알림 타입의 응답 데이터를 생성하는 `NotificationDataMapper` 구현체만 추가
+
+이 구조를 통해,
+- 알림 타입 증가에 따른 **조건 분기 코드 증가를 방지**
+- **쿼리 구조와 조회 흐름은 그대로 유지**
+- 알림 타입 확장 시 **로딩 로직과 응답 매핑만 분리해서 확장 가능**
+
+결과적으로,  
+**조회 성능과 응답 확장성을 동시에 유지할 수 있는 구조**로 알림 조회 API를 설계했습니다.
+
+<br>
+
+</details>
 
 # 🔥 트러블 슈팅
 
