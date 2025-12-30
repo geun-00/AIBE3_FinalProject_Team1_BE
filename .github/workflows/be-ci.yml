@@ -197,6 +197,10 @@ jobs:
       # 🚀 최적화: 테스트 병렬 실행
       # ========================================
       - name: Run tests (JUnit5) with coverage
+        env:
+          SPRING__REDIS__HOST: localhost
+          SPRING__REDIS__PORT: localhost
+          SPRING__REDIS__PASSWORD: ${{secrets.DB_PASSWORD}}
         run: |
           ./gradlew test jacocoTestReport \
             -x generateJooqClasses \
