@@ -199,7 +199,7 @@ jobs:
       - name: Run tests (JUnit5) with coverage
         env:
           SPRING__REDIS__HOST: localhost
-          SPRING__REDIS__PORT: localhost
+          SPRING__REDIS__PORT: 6379
           SPRING__REDIS__PASSWORD: ${{secrets.DB_PASSWORD}}
         run: |
           ./gradlew test jacocoTestReport \
