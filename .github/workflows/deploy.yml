@@ -73,14 +73,41 @@ jobs:
   # ---------------------------------------------------------
   generateJooq:
     runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MYSQL_DATABASE: chwimeet
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
     env:
       CI: true
       SPRING_PROFILES_ACTIVE: test
-      # ✅ JOOQ 생성용 환경변수
       SPRING__DATASOURCE__USERNAME: root
       SPRING__DATASOURCE__PASSWORD: ${{ secrets.DB_PASSWORD }}
-      SPRING__DATASOURCE__URL: jdbc:mariadb://localhost:3306/chwimeet
+      SPRING__DATASOURCE__URL: jdbc:mariadb://127.0.0.1:3306/chwimeet
+
     steps:
+      # 1. 코드 체크아웃
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Java 설치
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # 3. Gradle wrapper 실행 권한 부여
+      - name: Grant execute permission for gradlew
+        working-directory: backend
+        run: chmod +x gradlew
+
+      # 4. JOOQ 캐시 확인
       - name: Cache JOOQ generated sources
         id: cache-jooq
         uses: actions/cache@v4
@@ -89,13 +116,11 @@ jobs:
           key: jooq-${{ hashFiles('backend/src/main/resources/db/migration/*.sql', 'backend/build.gradle.kts') }}
           restore-keys: |
             jooq-
+
+      # 5. JOOQ 생성 (캐시 미스 시)
       - name: Generate JOOQ sources
         if: steps.cache-jooq.outputs.cache-hit != 'true'
         working-directory: backend
-        env:
-          SPRING__DATASOURCE__USERNAME: root
-          SPRING__DATASOURCE__PASSWORD: ${{ secrets.DB_PASSWORD }}
-          SPRING__DATASOURCE__URL: jdbc:mariadb://localhost:3306/chwimeet
         run: |
           echo "=== Starting JOOQ Generation ==="
           echo "Checking environment variables (masked):"
@@ -114,10 +139,8 @@ jobs:
             echo "❌ JOOQ generation failed"
             exit 1
           fi
-          
-          echo "=== Verifying tables in database ==="
-          docker exec chwimeet-mariadb mariadb -uroot -p${{ secrets.DB_PASSWORD }} -e "USE chwimeet; SHOW TABLES;"
 
+      # 6. 캐시 히트 시 로그
       - name: Skip JOOQ generation (using cache)
         if: steps.cache-jooq.outputs.cache-hit == 'true'
         run: |
