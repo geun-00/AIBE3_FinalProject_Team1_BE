@@ -153,27 +153,44 @@ jobs:
           fi
 
   # ---------------------------------------------------------
-  # 2) 도커 이미지 빌드/푸시 (캐시 최대 활용)
+  # 2) 도커 이미지 빌드/푸시
   # ---------------------------------------------------------
   buildImageAndPush:
     name: 도커 이미지 빌드와 푸시
-    needs: makeTagAndRelease
+    needs: [makeTagAndRelease, generateJooq]  # ← generateJooq 의존성 추가
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # JOOQ 생성 파일 다운로드
+      - name: Download JOOQ generated sources
+        uses: actions/download-artifact@v4
+        with:
+          name: jooq-generated-sources
+          path: backend/src/generated
+
+      # 다운로드 확인
+      - name: Verify JOOQ sources
+        run: |
+          echo "📦 Downloaded JOOQ sources:"
+          ls -la backend/src/generated/com/back/jooq/tables/ || echo "⚠️  JOOQ tables not found"
+
       - name: Docker Buildx 설치
         uses: docker/setup-buildx-action@v2
+
       - name: GHCR 로그인
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Owner 이름 소문자 변환
         run: |
           echo "OWNER_LC=${OWNER,,}" >> ${GITHUB_ENV}
         env:
           OWNER: "${{ github.repository_owner }}"
+
       - name: 도커 빌드 및 푸시
         uses: docker/build-push-action@v3
         with:
