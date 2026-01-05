@@ -14,3 +14,10 @@ spring:
         table-name: vector_store
         dimensions: 1536
         distance-type: COSINE
+
+logging:
+  level:
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.hibernate.orm.jdbc.extract: TRACE
+    org.springframework.transaction.interceptor: TRACE
+    com.back: DEBUG

@@ -93,12 +93,7 @@ spring:
             user-name-attribute: id
 springdoc:
   default-produces-media-type: application/json;charset=UTF-8
-logging:
-  level:
-    org.hibernate.orm.jdbc.bind: TRACE
-    org.hibernate.orm.jdbc.extract: TRACE
-    org.springframework.transaction.interceptor: TRACE
-    com.back: DEBUG
+
 custom:
   cors:
     allowed-origins: ${CUSTOM__CORS__ALLOWED__ORIGINS}

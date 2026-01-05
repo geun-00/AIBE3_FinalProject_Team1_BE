@@ -97,6 +97,8 @@ public class S3Uploader {
 	}
 
 	public String getProfileThumbnailUrl(String originalUrl) {
+		return originalUrl;
+/*
 		if (originalUrl == null || originalUrl.isBlank()) {
 			return null;
 		}
@@ -129,6 +131,7 @@ public class S3Uploader {
 			// 실패하면 원본 URL 그대로 반환
 			return originalUrl;
 		}
+*/
 	}
 
 	public void deleteProfileSafely(String imageUrl) {
@@ -198,11 +201,11 @@ public class S3Uploader {
 	}
 
 	public String getPostThumbnailUrl(String originalUrl) {
-		return getPostResizedUrl(originalUrl, "thumbnail");
+		return originalUrl;
 	}
 
 	public String getPostDetailUrl(String originalUrl) {
-		return getPostResizedUrl(originalUrl, "detail");
+		return originalUrl;
 	}
 
 	public String getPostResizedUrl(String originalUrl, String sizeType) {
