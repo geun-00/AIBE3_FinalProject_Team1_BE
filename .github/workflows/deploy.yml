@@ -19,10 +19,8 @@ concurrency:
 on:
   push:
     paths:
+      - "backend/**"
       - ".github/workflows/**"
-      - "src/**"
-      - "build.gradle"
-      - "settings.gradle"
       - "Dockerfile"
     branches:
       - main
