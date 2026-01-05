@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,7 +37,8 @@ public class ReviewSummaryService {
     @Value("${custom.ai.author-review-summary-prompt}")
     private String authorReviewSummaryPrompt;
 
-    public String summarizePostReviewsV0(Long postId) {
+    @Cacheable(value = "postReviewSummary", key = "#postId")
+    public String summarizePostReviewsV1(Long postId) {
         List<Review> reviews = reviewQueryRepository.findTop30ByPostId(postId);
 
         if (reviews.isEmpty()) {
