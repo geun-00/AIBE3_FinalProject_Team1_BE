@@ -37,25 +37,6 @@ public class ReviewSummaryService {
     @Value("${custom.ai.author-review-summary-prompt}")
     private String authorReviewSummaryPrompt;
 
-    @Cacheable(value = "postReviewSummary", key = "#postId")
-    public String summarizePostReviewsV1(Long postId) {
-        List<Review> reviews = reviewQueryRepository.findTop30ByPostId(postId);
-
-        if (reviews.isEmpty()) {
-            return "후기가 없습니다.";
-        }
-
-        String reviewsText = reviews.stream()
-                                    .map(Review::getComment)
-                                    .collect(Collectors.joining("\n"));
-
-        return chatClient.prompt()
-                         .system(reviewSummaryPrompt)
-                         .user("후기:\n" + reviewsText)
-                         .call()
-                         .content();
-    }
-
     public String summarizePostReviews(Long postId) {
         String lockKey = "lock:postReviewSummary:" + postId;
         RLock lock = redissonClient.getLock(lockKey);
@@ -97,6 +78,7 @@ public class ReviewSummaryService {
                     "cache_name", "postReviewSummary"
             ).increment();
 
+/*
             cachedSummary = getCachedSummary(postId);
             if (cachedSummary != null) {
                 log.info("캐시 히트 (락 후): postId={} - 다른 스레드가 생성함", postId);
@@ -109,6 +91,7 @@ public class ReviewSummaryService {
                 recordResponseTime(startTime, "after_lock_hit");
                 return cachedSummary;
             }
+*/
 
             log.info("캐시 미스 - LLM 호출: postId={}", postId);
             meterRegistry.counter("cache.miss",
